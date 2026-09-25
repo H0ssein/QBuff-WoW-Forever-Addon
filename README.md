@@ -15,3 +15,6 @@
 - **Shift + left click** to drag buff icon.
 - **Shift + right click** on buff icon to open settings or use `/qbuff` in chat.
 - **Travelers (Out-of-Party):** To automatically detect and buff passing travelers, you must either have **friendly nameplates enabled** (default `V` or `Shift-V`) or physically **mouse over** them.
+
+
+<img width="896" height="492" alt="bandicam 2026-09-25 09-18-49-949" src="https://github.com/user-attachments/assets/e5382ec6-bae4-4c6f-b2f3-66db9e50250a" />
