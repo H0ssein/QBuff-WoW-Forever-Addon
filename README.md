@@ -14,7 +14,7 @@
 - **Click** the QBuff UI icon or use your assigned hotkey to instantly cast the buff.
 - **Shift + left click** to drag buff icon.
 - **Shift + right click** on buff icon to open settings or use `/qbuff` in chat.
-- **Travelers (Out-of-Party):** To automatically detect and buff passing travelers, you must either have **friendly nameplates enabled** (default `V` or `Shift-V`) or physically **mouse over** them.
+- **Travelers (Out-of-Party):** To automatically detect and buff passing travelers, you must either have **friendly nameplates enabled** (`Shift-V`) or physically **mouse over** them.
 
 
 <img width="896" height="460" alt="bandicam 2026-09-25 09-18-49-949" src="https://github.com/user-attachments/assets/1be5a528-e310-419a-b371-d9bb540c2c66" />
