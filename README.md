@@ -8,8 +8,6 @@
 - **Smart Queueing System**: Automatically detects who needs what buff and prioritizes your party and raid members over random travelers.
 - **Customizable Buff Rules**: Choose exactly which buffs should be cast on which classes (e.g., Arcane Intellect only for mana users).
 - **Traveler Buffing**: Be the friendly neighborhood hero! Buff people you run past in the open world. This feature can be toggled on or off per buff.
-- **Failsafes & Performance**: Includes out-of-range detection, Line-of-Sight handling, and an extremely low CPU footprint to ensure your game never stutters.
-- **Class Colored Debugging**: Built-in debug mode to see exactly who is entering your buff queue, with beautifully colored names based on their class.
 
 ## Usage
 
