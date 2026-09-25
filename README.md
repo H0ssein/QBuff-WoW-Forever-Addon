@@ -18,3 +18,6 @@
 
 
 <img width="896" height="460" alt="bandicam 2026-09-25 09-18-49-949" src="https://github.com/user-attachments/assets/1be5a528-e310-419a-b371-d9bb540c2c66" />
+
+
+[![Crypto donation button by NOWPayments](https://nowpayments.io/images/embeds/donation-button-black.svg)](https://nowpayments.io/donation/mrajax)
