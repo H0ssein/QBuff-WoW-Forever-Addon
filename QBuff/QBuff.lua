@@ -1,6 +1,6 @@
 local addonName, addonTable = ...
 
-local DEBUG_MODE = true
+local DEBUG_MODE = false
 
 local function DebugPrint(msg, ...)
     if DEBUG_MODE then
