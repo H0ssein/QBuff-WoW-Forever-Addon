@@ -1,6 +1,6 @@
-## Interface: 11500
+## Interface: 16001
 ## Title: QBuff
-## Notes: A one-click buff manager that automatically queues missing buffs for you, your group, and friendly players.
+## Notes: A one-click buff manager that automatically queues missing buffs for you, your group, and nearby friendly players.
 ## Version: 0.1.1
 ## SavedVariables: QBuffDB
 ## SavedVariablesPerCharacter: QBuffSettingsPerChar
