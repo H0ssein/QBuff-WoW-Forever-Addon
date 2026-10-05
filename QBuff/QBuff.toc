@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: QBuff
 ## Notes: A one-click buff manager that automatically queues missing buffs for you, your group, and nearby friendly players.
-## Version: 0.1.1
+## Version: 0.1.2
 ## SavedVariables: QBuffDB
 ## SavedVariablesPerCharacter: QBuffSettingsPerChar
 ## IconTexture: Interface\AddOns\QBuff\QBuff.tga
