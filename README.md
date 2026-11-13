@@ -8,6 +8,8 @@
 - **Smart Queueing System**: Automatically detects who needs what buff and prioritizes your party and raid members over random travelers.
 - **Customizable Buff Rules**: Choose exactly which buffs should be cast on which classes (e.g., Arcane Intellect only for mana users).
 - **Traveler Buffing**: Be the friendly neighborhood hero! Buff people you run past in the open world. This feature can be toggled on or off per buff.
+- **Smart Downranking**: Automatically selects the correct spell rank when buffing lower-level players and travelers to prevent "Target is too low level" errors.
+- **Pet Buffing**: Supports party and raid pets with smart resource detection.
 
 ## Usage
 
