@@ -66,7 +66,7 @@ end)
 genSettingsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local genFrame = CreateFrame("Frame", "QBuffGeneralSettings", f, "BackdropTemplate")
-genFrame:SetSize(220, 150)
+genFrame:SetSize(220, 180)
 genFrame:SetPoint("TOPLEFT", f, "TOPRIGHT", 15, 0)
 genFrame:SetFrameStrata("HIGH")
 genFrame:Hide()
@@ -151,6 +151,28 @@ glowCb:SetScript("OnEnter", function(self)
     GameTooltip:Show()
 end)
 glowCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+local petsCb = CreateFrame("CheckButton", nil, genFrame, "UICheckButtonTemplate")
+petsCb:SetPoint("TOPLEFT", 15, -135)
+petsCb:SetSize(24, 24)
+
+local petsLabel = genFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+petsLabel:SetPoint("LEFT", petsCb, "RIGHT", 5, 0)
+petsLabel:SetText("Buff Group Pets")
+
+petsCb:SetScript("OnClick", function(self)
+    if not QBuffSettingsPerChar then QBuffSettingsPerChar = {} end
+    QBuffSettingsPerChar.buffPets = self:GetChecked()
+    if addonTable.ClearQueue then addonTable.ClearQueue() end
+end)
+
+petsCb:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Buff Group Pets", 1, 0.8, 0.1)
+    GameTooltip:AddLine("Automatically queues missing buffs for\npets belonging to you and your group.", 1, 1, 1)
+    GameTooltip:Show()
+end)
+petsCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local btnText = hotkeyBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 btnText:SetPoint("LEFT", 5, 0)
@@ -663,6 +685,12 @@ f:SetScript("OnShow", function()
         glowCb:SetChecked(true)
     end
 
+    if QBuffSettingsPerChar and QBuffSettingsPerChar.buffPets ~= nil then
+        petsCb:SetChecked(QBuffSettingsPerChar.buffPets)
+    else
+        petsCb:SetChecked(false)
+    end
+
     if contentFrame.initialized then return end
     if not addonTable.MyBuffs then return end
 
@@ -705,7 +733,7 @@ f:SetScript("OnShow", function()
     contentFrame:SetPoint("TOPLEFT", 10, contentStartY)
     contentFrame:SetPoint("BOTTOMRIGHT", -10, 10)
 
-    local showDivider = (numNormal > 0 and numSelf > 1)
+    local showDivider = (numNormal > 0 and numSelf > 0)
     local dividerHeight = showDivider and 14 or 0
     local selfSectionHeight = (numSelfRows > 0) and (dividerHeight + (numSelfRows * 44)) or 0
 

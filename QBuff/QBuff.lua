@@ -27,7 +27,7 @@ local Config = {
 }
 
 local ClassBuffs = {
-    ["PRIEST"] = {"Power Word: Fortitude"},
+    ["PRIEST"] = {"Power Word: Fortitude", "Divine Spirit", "Inner Fire"},
     ["MAGE"] = {
         "Arcane Intellect",
         "Dampen Magic",
@@ -52,6 +52,8 @@ local ClassBuffs = {
 
 local BuffDefaults = {
     ["Power Word: Fortitude"]  = { enabled = true,  self = true,  party = true,  travelers = false },
+    ["Divine Spirit"]          = { enabled = true,  self = true,  party = true,  travelers = false },
+    ["Inner Fire"]             = { enabled = true,  self = true,  party = false, travelers = false },
     ["Arcane Intellect"]       = { enabled = true,  self = true,  party = true,  travelers = false },
     ["Frost Armor"]            = { enabled = true,  self = true,  party = false, travelers = false },
     ["Ice Armor"]              = { enabled = false, self = true,  party = false, travelers = false },
@@ -86,6 +88,7 @@ addonTable.BuffMutuallyExclusive = BuffMutuallyExclusive
 
 local BuffTargetClasses = {
     ["Power Word: Fortitude"] = {WARRIOR=true, ROGUE=true, HUNTER=true, MAGE=true, WARLOCK=true, PRIEST=true, DRUID=true, SHAMAN=true, PALADIN=true},
+    ["Divine Spirit"]         = {WARRIOR=false, ROGUE=false, HUNTER=true, MAGE=true, WARLOCK=true, PRIEST=true, DRUID=true, SHAMAN=true, PALADIN=true},
     ["Arcane Intellect"]      = {WARRIOR=false, ROGUE=false, HUNTER=true, MAGE=true, WARLOCK=true, PRIEST=true, DRUID=true, SHAMAN=true, PALADIN=true},
     ["Mark of the Wild"]      = {WARRIOR=true, ROGUE=true, HUNTER=true, MAGE=true, WARLOCK=true, PRIEST=true, DRUID=true, SHAMAN=true, PALADIN=true},
     ["Thorns"]                = {WARRIOR=true, ROGUE=true, HUNTER=true, MAGE=true, WARLOCK=true, PRIEST=true, DRUID=true, SHAMAN=true, PALADIN=true},
@@ -102,6 +105,8 @@ addonTable.BuffTargetClasses = BuffTargetClasses
 
 local BuffIcons = {
     ["Power Word: Fortitude"]  = "Interface\\Icons\\Spell_Holy_WordFortitude",
+    ["Divine Spirit"]          = "Interface\\Icons\\Spell_Holy_DivineSpirit",
+    ["Inner Fire"]             = "Interface\\Icons\\Spell_Holy_InnerFire",
     ["Arcane Intellect"]       = "Interface\\Icons\\Spell_Holy_MagicalSentry",
     ["Frost Armor"]            = "Interface\\Icons\\Spell_Frost_FrostArmor02",
     ["Ice Armor"]              = "Interface\\Icons\\Spell_Frost_FrostArmor02",
@@ -145,8 +150,136 @@ local IsSelfCastBuff = {
     ["Ice Barrier"]        = true,
     ["Fire Ward"]          = true,
     ["Frost Ward"]         = true,
+    ["Inner Fire"]         = true,
 }
 addonTable.IsSelfCastBuff = IsSelfCastBuff
+
+local SpellRanks = {
+    ["Power Word: Fortitude"] = {
+        { rank = 1, level = 1 },
+        { rank = 2, level = 12 },
+        { rank = 3, level = 24 },
+        { rank = 4, level = 36 },
+        { rank = 5, level = 48 },
+        { rank = 6, level = 60 },
+    },
+    ["Mark of the Wild"] = {
+        { rank = 1, level = 1 },
+        { rank = 2, level = 10 },
+        { rank = 3, level = 20 },
+        { rank = 4, level = 30 },
+        { rank = 5, level = 40 },
+        { rank = 6, level = 50 },
+        { rank = 7, level = 60 },
+    },
+    ["Thorns"] = {
+        { rank = 1, level = 6 },
+        { rank = 2, level = 14 },
+        { rank = 3, level = 24 },
+        { rank = 4, level = 34 },
+        { rank = 5, level = 44 },
+        { rank = 6, level = 54 },
+    },
+    ["Arcane Intellect"] = {
+        { rank = 1, level = 1 },
+        { rank = 2, level = 14 },
+        { rank = 3, level = 28 },
+        { rank = 4, level = 42 },
+        { rank = 5, level = 56 },
+    },
+    ["Dampen Magic"] = {
+        { rank = 1, level = 12 },
+        { rank = 2, level = 24 },
+        { rank = 3, level = 36 },
+        { rank = 4, level = 48 },
+        { rank = 5, level = 60 },
+    },
+    ["Amplify Magic"] = {
+        { rank = 1, level = 18 },
+        { rank = 2, level = 30 },
+        { rank = 3, level = 42 },
+        { rank = 4, level = 54 },
+    },
+    ["Blessing of Might"] = {
+        { rank = 1, level = 4 },
+        { rank = 2, level = 12 },
+        { rank = 3, level = 22 },
+        { rank = 4, level = 32 },
+        { rank = 5, level = 42 },
+        { rank = 6, level = 52 },
+        { rank = 7, level = 60 },
+    },
+    ["Blessing of Wisdom"] = {
+        { rank = 1, level = 14 },
+        { rank = 2, level = 24 },
+        { rank = 3, level = 34 },
+        { rank = 4, level = 44 },
+        { rank = 5, level = 54 },
+    },
+    ["Divine Spirit"] = {
+        { rank = 1, level = 30 },
+        { rank = 2, level = 40 },
+        { rank = 3, level = 50 },
+        { rank = 4, level = 60 },
+    },
+    ["Blessing of Kings"] = {
+        { rank = 1, level = 20 },
+    },
+    ["Unending Breath"] = {
+        { rank = 1, level = 16 },
+    },
+    ["Detect Invisibility"] = {
+        { rank = 1, level = 38 },
+    },
+    ["Water Walking"] = {
+        { rank = 1, level = 28 },
+    },
+}
+
+local playerKnownRanks = {}
+
+local function GetBestSpellForTarget(unit, buffName)
+    local ranks = SpellRanks[buffName]
+    if not ranks then
+        return buffName
+    end
+
+    if not unit or not UnitExists(unit) then
+        return buffName
+    end
+
+    local targetLevel = UnitLevel(unit)
+    if not targetLevel or targetLevel <= 0 then
+        return buffName
+    end
+
+    local known = playerKnownRanks[buffName]
+    local playerLevel = UnitLevel("player") or 60
+
+    local bestRank = nil
+    local maxKnownRank = 0
+
+    for _, r in ipairs(ranks) do
+        local isKnown = (known and known[r.rank]) or (not known and r.level <= playerLevel)
+        if isKnown then
+            if r.rank > maxKnownRank then maxKnownRank = r.rank end
+            local minTargetLevel = (r.level > 10) and (r.level - 10) or 1
+            if targetLevel >= minTargetLevel then
+                bestRank = r.rank
+            end
+        end
+    end
+
+    if not bestRank then
+        return nil
+    end
+
+    if bestRank == maxKnownRank or #ranks == 1 then
+        return buffName
+    else
+        return string.format("%s(Rank %d)", buffName, bestRank)
+    end
+end
 
 if not potentialBuffs then
     return
@@ -154,21 +287,49 @@ end
 
 function QBuff_UpdateKnownBuffs()
     local knownSpells = {}
+    wipe(playerKnownRanks)
     local i = 1
     while true do
-        local name = nil
+        local name, subtext = nil, nil
         if C_SpellBook and C_SpellBook.GetSpellBookItemName then
             local bank = (Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player) or 0
             name = C_SpellBook.GetSpellBookItemName(i, bank)
+            if C_SpellBook.GetSpellBookItemSubtext then
+                subtext = C_SpellBook.GetSpellBookItemSubtext(i, bank)
+            end
         elseif GetSpellBookItemName then
-            name = GetSpellBookItemName(i, "spell")
+            name, subtext = GetSpellBookItemName(i, "spell")
         elseif GetSpellName then
-            name = GetSpellName(i, "spell")
+            name, subtext = GetSpellName(i, "spell")
+        end
+        if not subtext and GetSpellSubtext then
+            subtext = GetSpellSubtext(i, "spell")
         end
 
         if not name then break end
         knownSpells[name] = true
+
+        local rankNum = tonumber(string.match(subtext or "", "(%d+)"))
+        if rankNum then
+            if not playerKnownRanks[name] then playerKnownRanks[name] = {} end
+            playerKnownRanks[name][rankNum] = true
+        end
+
         i = i + 1
+    end
+
+    local playerLvl = UnitLevel("player") or 60
+    for spell, rankList in pairs(SpellRanks) do
+        if knownSpells[spell] then
+            if not playerKnownRanks[spell] or not next(playerKnownRanks[spell]) then
+                playerKnownRanks[spell] = {}
+                for _, r in ipairs(rankList) do
+                    if r.level <= playerLvl then
+                        playerKnownRanks[spell][r.rank] = true
+                    end
+                end
+            end
+        end
     end
 
     wipe(addonTable.MyBuffs)
@@ -630,7 +791,8 @@ end
 local function GetMissingBuffs(unit, name)
     local missing = {}
     local isSelf = UnitIsUnit("player", unit)
-    local isParty = string.match(unit, "^party") or string.match(unit, "^raid")
+    local isParty = string.match(unit, "^party") or string.match(unit, "^raid") or string.match(unit, "pet")
+    local isPet = (not UnitIsPlayer(unit)) and (UnitPlayerOrPetInParty(unit) or UnitPlayerOrPetInRaid(unit) or unit == "pet" or string.match(unit, "pet") or false)
 
     local skipBuff = {}
     for _, group in ipairs(BuffMutuallyExclusive) do
@@ -659,10 +821,18 @@ local function GetMissingBuffs(unit, name)
                 elseif isParty then allowed = conf.party
                 else allowed = conf.travelers end
 
-                if allowed and not isSelf and conf.classes then
+                if allowed and not isSelf and not isPet and conf.classes then
                     local _, unitClass = UnitClass(unit)
                     if unitClass and conf.classes[unitClass] == false then
                         allowed = false
+                    end
+                end
+
+                if allowed and isPet then
+                    if buff == "Arcane Intellect" or buff == "Divine Spirit" or buff == "Blessing of Wisdom" then
+                        if UnitPowerType(unit) ~= 0 or UnitPowerMax(unit, 0) <= 0 then
+                            allowed = false
+                        end
                     end
                 end
 
@@ -683,6 +853,13 @@ local function GetMissingBuffs(unit, name)
             if allowed and WeaponImbueBuffs[buff] then
                 local hasWeapon = GetInventoryItemLink("player", 16) or GetInventoryItemLink("player", 17)
                 if not hasWeapon then
+                    allowed = false
+                end
+            end
+
+            if allowed then
+                local bestSpell = GetBestSpellForTarget(unit, buff)
+                if not bestSpell then
                     allowed = false
                 end
             end
@@ -740,6 +917,8 @@ local function UpdateButton(unit, name, missingBuff)
     currentTargetName = name
     currentSpell = missingBuff
 
+    local castSpell = GetBestSpellForTarget(unit, missingBuff) or missingBuff
+
     local spellIcon = BuffIcons[missingBuff] or (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(missingBuff)) or (GetSpellTexture and GetSpellTexture(missingBuff))
     if spellIcon then
         icon:SetTexture(spellIcon)
@@ -754,21 +933,21 @@ local function UpdateButton(unit, name, missingBuff)
 
     if IsSelfCastBuff[missingBuff] then
         frame:SetAttribute("type1", "macro")
-        frame:SetAttribute("macrotext1", "/cast " .. missingBuff)
-    elseif unit and (string.match(unit, "^party") or string.match(unit, "^raid") or unit == "target" or unit == "player") then
+        frame:SetAttribute("macrotext1", "/cast " .. castSpell)
+    elseif unit and (string.match(unit, "^party") or string.match(unit, "^raid") or unit == "target" or unit == "player" or unit == "pet" or string.match(unit, "pet")) then
         frame:SetAttribute("type1", "spell")
-        frame:SetAttribute("spell1", missingBuff)
+        frame:SetAttribute("spell1", castSpell)
         frame:SetAttribute("unit1", unit)
     else
         frame:SetAttribute("type1", "macro")
         frame:SetAttribute("q_name", name)
-        frame:SetAttribute("q_buff", missingBuff)
+        frame:SetAttribute("q_buff", castSpell)
 
         if UnitExists("target") then
-            local macro = string.format("/targetexact %s\n/cast [@target,exists,help] %s\n/targetlasttarget", name, missingBuff)
+            local macro = string.format("/targetexact %s\n/cast [@target,exists,help] %s\n/targetlasttarget", name, castSpell)
             frame:SetAttribute("macrotext1", macro)
         else
-            local macro = string.format("/targetexact %s\n/cast [@target,exists,help] %s\n/cleartarget", name, missingBuff)
+            local macro = string.format("/targetexact %s\n/cast [@target,exists,help] %s\n/cleartarget", name, castSpell)
             frame:SetAttribute("macrotext1", macro)
         end
     end
@@ -783,9 +962,15 @@ local function UpdateButton(unit, name, missingBuff)
     end
 end
 
-local priorityUnitsToScan = {"player"}
-for i = 1, 4 do table.insert(priorityUnitsToScan, "party"..i) end
-for i = 1, 40 do table.insert(priorityUnitsToScan, "raid"..i) end
+local priorityUnitsToScan = {"player", "pet"}
+for i = 1, 4 do
+    table.insert(priorityUnitsToScan, "party"..i)
+    table.insert(priorityUnitsToScan, "partypet"..i)
+end
+for i = 1, 40 do
+    table.insert(priorityUnitsToScan, "raid"..i)
+    table.insert(priorityUnitsToScan, "raidpet"..i)
+end
 
 local lowPriorityUnitsToScan = {"target", "mouseover"}
 for i = 1, 40 do table.insert(lowPriorityUnitsToScan, "nameplate"..i) end
@@ -798,10 +983,16 @@ ProcessQueue = function()
         local current = buffQueue[i]
 
         local currentUnitToken = nil
-        for _, u in ipairs(priorityUnitsToScan) do
-            if UnitExists(u) and GetUnitName(u, false) == current.name then
-                currentUnitToken = u
-                break
+        if current.unitToken and UnitExists(current.unitToken) and GetUnitName(current.unitToken, false) == current.name then
+            currentUnitToken = current.unitToken
+        end
+
+        if not currentUnitToken then
+            for _, u in ipairs(priorityUnitsToScan) do
+                if UnitExists(u) and GetUnitName(u, false) == current.name then
+                    currentUnitToken = u
+                    break
+                end
             end
         end
         if not currentUnitToken then
@@ -816,7 +1007,7 @@ ProcessQueue = function()
         if currentUnitToken then
             current.lastSeen = GetTime()
             current.isGhost = false
-            current.isParty = (string.match(currentUnitToken, "^party") or string.match(currentUnitToken, "^raid") or currentUnitToken == "player")
+            current.isParty = (string.match(currentUnitToken, "^party") or string.match(currentUnitToken, "^raid") or currentUnitToken == "player" or currentUnitToken == "pet")
 
             if current.isParty then
                 local missingBuffs = GetMissingBuffs(currentUnitToken, current.name)
@@ -920,15 +1111,20 @@ local function CheckUnit(unit)
     if UnitIsDeadOrGhost("player") then return end
     if IsMounted() or UnitOnTaxi("player") then return end
 
+    local isPet = (not UnitIsPlayer(unit)) and (UnitPlayerOrPetInParty(unit) or UnitPlayerOrPetInRaid(unit) or unit == "pet" or string.match(unit, "pet") or false)
+    if isPet and not (QBuffSettingsPerChar and QBuffSettingsPerChar.buffPets) then
+        return
+    end
+
     if unit == "mouseover" and GetCVar("nameplateShowFriends") == "1" then
         return
     end
 
-    if (unit == "mouseover" or unit == "target") and (UnitInParty(unit) or UnitInRaid(unit) or UnitIsUnit("player", unit)) then
+    if (unit == "mouseover" or unit == "target") and (UnitInParty(unit) or UnitInRaid(unit) or UnitIsUnit("player", unit) or isPet) then
         return
     end
 
-    if UnitExists(unit) and UnitIsPlayer(unit) and (UnitIsUnit("player", unit) or UnitIsFriend("player", unit)) then
+    if UnitExists(unit) and (UnitIsPlayer(unit) or isPet) and (UnitIsUnit("player", unit) or UnitIsFriend("player", unit)) then
         if UnitOnTaxi(unit) then return end
 
         local name = GetUnitName(unit, false)
@@ -950,48 +1146,57 @@ local function CheckUnit(unit)
         local recentlyProcessed = false
         if qVal == true then
             recentlyProcessed = true
-            elseif type(qVal) == "number" then
-                if GetTime() - qVal < 300 then
-                    recentlyProcessed = true
-                else
-                    queuedNames[name] = nil
-                end
+        elseif type(qVal) == "number" then
+            if GetTime() - qVal < 300 then
+                recentlyProcessed = true
+            else
+                queuedNames[name] = nil
             end
+        end
 
-            if not recentlyProcessed then
-                local missingBuffs = GetMissingBuffs(unit, name)
-                if missingBuffs then
-                    local firstBuff = missingBuffs[1]
-                    if not IsSelfCastBuff[firstBuff] and not UnitIsUnit("player", unit) then
-                        local res = IsSpellInRangeCompat(firstBuff, unit)
-                        local inRange = true
-                        if res == 0 then
-                            inRange = false
-                        elseif res == nil then
-                            inRange = CheckInteractDistance(unit, 1) and true or false
-                        end
-
-                        if not inRange then
-                            return
-                        end
+        if not recentlyProcessed then
+            local missingBuffs = GetMissingBuffs(unit, name)
+            if missingBuffs then
+                local firstBuff = missingBuffs[1]
+                if not IsSelfCastBuff[firstBuff] and not UnitIsUnit("player", unit) then
+                    local res = IsSpellInRangeCompat(firstBuff, unit)
+                    local inRange = true
+                    if res == 0 then
+                        inRange = false
+                    elseif res == nil then
+                        inRange = CheckInteractDistance(unit, 1) and true or false
                     end
+
+                    if not inRange then
+                        return
+                    end
+                end
 
                 local priority = 3
                 if UnitIsUnit("player", unit) or UnitInParty(unit) or UnitInRaid(unit) then
                     priority = 1
+                elseif isPet then
+                    priority = 2
                 elseif unit == "target" then
                     priority = 2
                 end
 
-                local _, class = UnitClass(unit)
-                local coloredName = GetClassColoredName(name, class)
+                local coloredName
+                if isPet then
+                    coloredName = string.format("|cffabd473%s|r", name)
+                else
+                    local _, class = UnitClass(unit)
+                    coloredName = GetClassColoredName(name, class)
+                end
+
                 table.insert(buffQueue, {
                     name = name,
                     coloredName = coloredName,
+                    unitToken = unit,
                     spells = missingBuffs,
                     spell = missingBuffs[1],
                     priority = priority,
-                    isParty = UnitInParty(unit) or UnitInRaid(unit),
+                    isParty = UnitInParty(unit) or UnitInRaid(unit) or isPet,
                     addedAt = GetTime()
                 })
                 queuedNames[name] = true
