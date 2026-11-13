@@ -595,7 +595,50 @@ end
 local WeaponImbueBuffs = {
     ["Rockbiter Weapon"]   = true,
     ["Flametongue Weapon"] = true,
+    ["Frostbrand Weapon"]  = true,
+    ["Windfury Weapon"]    = true,
 }
+
+local function IsValidWeaponForImbue(slot)
+    local itemID = GetInventoryItemID("player", slot)
+    if not itemID then return false end
+
+    if C_Item and C_Item.GetItemInfoInstant then
+        local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+        if classID == 2 and subclassID == 20 then
+            return false
+        end
+    elseif GetItemInfoInstant then
+        local _, _, _, _, _, classID, subclassID = GetItemInfoInstant(itemID)
+        if classID == 2 and subclassID == 20 then
+            return false
+        end
+    end
+
+    local link = GetInventoryItemLink("player", slot)
+    if link then
+        local lowerLink = string.lower(link)
+        if string.find(lowerLink, "fishing", 1, true) then
+            return false
+        end
+
+        local _, _, _, _, _, _, itemSubType, _, _, _, _, classID, subclassID
+        if C_Item and C_Item.GetItemInfo then
+            _, _, _, _, _, _, itemSubType, _, _, _, _, classID, subclassID = C_Item.GetItemInfo(link)
+        elseif GetItemInfo then
+            _, _, _, _, _, _, itemSubType, _, _, _, _, classID, subclassID = GetItemInfo(link)
+        end
+
+        if classID == 2 and subclassID == 20 then
+            return false
+        end
+        if itemSubType and string.find(string.lower(itemSubType), "fishing", 1, true) then
+            return false
+        end
+    end
+
+    return true
+end
 
 local imbueCache = nil
 local imbueCacheTime = 0
@@ -606,6 +649,10 @@ function QBuff_InvalidateImbueCache()
 end
 
 local function HasWeaponImbue(buffName)
+    if not IsValidWeaponForImbue(16) and not IsValidWeaponForImbue(17) then
+        return true, 9999
+    end
+
     if imbueCache and (GetTime() - imbueCacheTime < 5.0) then
         if imbueCache[buffName] ~= nil then
             return unpack(imbueCache[buffName])
@@ -851,7 +898,7 @@ local function GetMissingBuffs(unit, name)
             end
 
             if allowed and WeaponImbueBuffs[buff] then
-                local hasWeapon = GetInventoryItemLink("player", 16) or GetInventoryItemLink("player", 17)
+                local hasWeapon = IsValidWeaponForImbue(16) or IsValidWeaponForImbue(17)
                 if not hasWeapon then
                     allowed = false
                 end
